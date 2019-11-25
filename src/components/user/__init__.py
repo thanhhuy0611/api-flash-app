@@ -135,52 +135,19 @@ def dashboard(id):
 
 
 
-###########____EVENT___#################
+###########____REFER___#################
 # comment------------------------------------------
-@user_blueprint.route('/<id>/comments', methods=['GET','POST'])
-def create_comment(id):
-    ref = request.args.get('ref')
-    print(ref)
-    if request.method == "POST":
-        comment = Comment(
-            body = request.form["body"],
-            user_id = current_user.id,
-            blog_id = id
-        )
-    db.session.add(comment)
-    db.session.commit()
-    return redirect(url_for(ref, id= id))
 
-# delete comment
-@user_blueprint.route('/<id>/comments/<id_comment>', methods=['GET','POST'])
-@login_required
-def delete_comment(id,id_comment):
-    ref = request.args.get('ref')
-    print('ref',ref)
-    comment = Comment.query.filter_by(id = id_comment).first()
-    db.session.delete(comment)
-    db.session.commit()
-    return redirect(url_for(ref, id= id))
+## delete comment
+# @user_blueprint.route('/<id>/comments/<id_comment>', methods=['GET','POST'])
+# @login_required
+# def delete_comment(id,id_comment):
+#     ref = request.args.get('ref')
+#     print('ref',ref)
+#     comment = Comment.query.filter_by(id = id_comment).first()
+#     db.session.delete(comment)
+#     db.session.commit()
+#     return redirect(url_for(ref, id= id))
 
 
-#view a blog
-@user_blueprint.route('/<id>',methods=["GET","POST"])
-def view_post(id):
-    post = Blog.query.get(id)
-    post.view_count +=1
-    db.session.commit() 
-    post.comments = Comment.query.filter_by(blog_id = id).all()
-    return render_template('/post.html',post = post, ref = 'user.view_post')
-
-#Edit a blog
-@user_blueprint.route('/<id>/edit',methods=['GET','POST'])
-@login_required
-def edit_post(id):
-    post = Blog.query.get(id)
-    if request.method == "POST":
-        post.title = request.form['title']
-        post.body = request.form['body']
-        db.session.commit()
-        return redirect(url_for('user.view_post',id = id))
-    return render_template('/editpost.html',post = post)
 ##-----###################################################

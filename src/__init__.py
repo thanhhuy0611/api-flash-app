@@ -112,30 +112,3 @@ def logout():
 
 
 
-#-----------------IGNORE------------------##
-
-# add new blog
-@app.route('/newpost',methods=["GET","POST"])
-def new_post():
-    if request.method == "POST":
-        new_blog =  Blog(
-            title = request.form["title"],
-            body = request.form["body"],
-            author = current_user.user_name,
-            user_id = current_user.id
-        )
-        db.session.add(new_blog)
-        db.session.commit()
-        return redirect(url_for('home'))
-
-# delete a blog
-@app.route('/blog/<b>', methods=["GET","POST","DELETE"])
-@login_required
-def delete_blog(b):
-    if request.method =="POST":
-        post = Blog.query.filter_by(id = b).first()
-        if not post:
-            return "there is no such post"
-        db.session.delete(post)
-        db.session.commit()
-        return redirect(url_for('home'))
