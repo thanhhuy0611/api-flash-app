@@ -1,33 +1,56 @@
 {% extends './base.html' %}
 
 {% block content %}
-<form method="POST" action="{{url_for('event.create')}}">
-    <label for="basic-url">What event do you want to organize, {{current_user.user_name}}?</label>
-    <div class="input-group mb-3">
-        <div class="input-group-prepend">
-            <span class="input-group-text" id="basic-addon3">Name</span>
+<div class="row">
+    <div class="col col-6">
+        <div class="container">
+            <form method="POST" action="{{url_for('event.create')}}">
+                <label for="basic-url">What event do you want to organize, {{current_user.user_name}}?</label>
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text" id="basic-addon3">Name</span>
+                    </div>
+                    <input name="name" value="{{event.name}}" type="text" class="form-control" id="basic-url"
+                        aria-describedby="basic-addon3">
+                </div>
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Contain</span>
+                    </div>
+                    <textarea name="contain" class="form-control"
+                        aria-label="With textarea">{{event.contain}}</textarea>
+                </div>
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text" id="basic-addon3">Location</span>
+                    </div>
+                    <input name="location" value="{{event.location}}" type="text" class="form-control" id="basic-url"
+                        aria-describedby="basic-addon3">
+                </div>
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text" id="basic-addon3">Banner</span>
+                    </div>
+                    <input name="banner_url" value="{{event.banner_url}}" type="text" class="form-control"
+                        id="basic-url" aria-describedby="basic-addon3">
+                </div>
+                <button type="submit" class="btn btn-primary mb-3">Edit</button>
+            </form>
         </div>
-        <input name="name" value="{{event.name}}" type="text" class="form-control" id="basic-url" aria-describedby="basic-addon3">
     </div>
-    <div class="input-group mb-3">
-        <div class="input-group-prepend">
-            <span class="input-group-text">Contain</span>
-        </div>
-        <textarea name="contain" class="form-control" aria-label="With textarea">{{event.contain}}</textarea>
+</div>
+
+
+<div class="row">
+    <div class="col col-6">
+        <h1>Create Ticket</h1>
+        <form action="{{url_for('ticket.create')}}" method="POST">
+            <input name="event_id" type="hidden" value="{{event.id}}" />
+            <input name="title" />
+            <input name="quantity" />
+            <button type="submit">Create</button>
+        </form>
     </div>
-    <div class="input-group mb-3">
-        <div class="input-group-prepend">
-            <span class="input-group-text" id="basic-addon3">Location</span>
-        </div>
-        <input name="location" value="{{event.location}}" type="text" class="form-control" id="basic-url" aria-describedby="basic-addon3">
-    </div>
-    <div class="input-group mb-3">
-        <div class="input-group-prepend">
-            <span class="input-group-text" id="basic-addon3">Banner</span>
-        </div>
-        <input name="banner_url" value="{{event.banner_url}}" type="text" class="form-control" id="basic-url" aria-describedby="basic-addon3">
-    </div>
-    <button type="submit" class="btn btn-primary mb-3">Edit</button>
-</form>
+</div>
 
 {% endblock %}

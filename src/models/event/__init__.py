@@ -1,4 +1,8 @@
 from src import db
+
+from src.models.user import Users
+from src.models.ticket import Ticket
+
 class Event(db.Model):
     id = db.Column(db.Integer, primary_key = True) 
     name = db.Column(db.String(1000),nullable= False)
@@ -13,30 +17,11 @@ class Event(db.Model):
         tickets = Ticket.query.filter_by(event_id = self.id).all()
         return tickets
 
-class Order(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer)
-    event_id = db.Column(db.Integer)
-
-    def tickets(self):
-        order_items = OrderItem.query.filter_by(order_id=self.id)
-        tickets = []
-        for order_item in order_items:
-            ticket = Ticket.query.get(order_item.ticket_id)
-            tickets.append(ticket)
-        return tickets
-
-class Ticket(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    quantity = db.Column(db.Integer)
-    title = db.Column(db.String)
-    event_id = db.Column(db.Integer)
-
-class OrderItem(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    order_id = db.Column(db.Integer)
-    ticket_id = db.Column(db.Integer)
-
+    def ratings(self):
+        ratings = Rating.query.filter_by(event_id = self.id).all()
+        for rating in ratings:
+            rating.user = Users.query.get(rating.user_id)
+        return ratings
 
 class Rating(db.Model):
     id = db.Column(db.Integer, primary_key = True)

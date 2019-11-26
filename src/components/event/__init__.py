@@ -58,9 +58,6 @@ def edit(id):
 @login_required
 def view(id):
   event = Event.query.get(id)
-  event.ratings = Rating.query.filter_by(event_id = id).all()
-  for rating in event.ratings:
-      rating.user =  Users.query.get(rating.user_id)
   return render_template('/event/view.html', event = event)
 
 

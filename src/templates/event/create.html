@@ -13,40 +13,46 @@
 {% endfor %}
 {% endif %}
 {% endwith %}
-<div class="container">
-  {% if current_user.user_type == "org": %}
 
-  <form method="POST" action="{{url_for('event.create')}}">
-    <label for="basic-url">What event do you want to organize, {{current_user.user_name}}?</label>
-    <div class="input-group mb-3">
-      <div class="input-group-prepend">
-        <span class="input-group-text" id="basic-addon3">Name</span>
-      </div>
-      <input name="name" type="text" class="form-control" id="basic-url" aria-describedby="basic-addon3">
-    </div>
-    <div class="input-group mb-3">
-      <div class="input-group-prepend">
-        <span class="input-group-text">Contain</span>
-      </div>
-      <textarea name="contain" class="form-control" aria-label="With textarea"></textarea>
-    </div>
-    <div class="input-group mb-3">
-      <div class="input-group-prepend">
-        <span class="input-group-text" id="basic-addon3">Location</span>
-      </div>
-      <input name="location" type="text" class="form-control" id="basic-url" aria-describedby="basic-addon3">
-    </div>
-    <div class="input-group mb-3">
-      <div class="input-group-prepend">
-        <span class="input-group-text" id="basic-addon3">Banner</span>
-      </div>
-      <input name="banner_url" type="text" class="form-control" id="basic-url" aria-describedby="basic-addon3">
-    </div>
-    <button type="submit" class="btn btn-primary mb-3">Create</button>
-  </form>
-  
-  {% endif %}
+<div class="row">
+  <div class="col">
+    <div class="container">
+      {% if current_user.user_type == "org": %}
 
+      <form method="POST" action="{{url_for('event.create')}}">
+        <label for="basic-url">What event do you want to organize, {{current_user.user_name}}?</label>
+        <div class="input-group mb-3">
+          <div class="input-group-prepend">
+            <span class="input-group-text" id="basic-addon3">Name</span>
+          </div>
+          <input name="name" type="text" class="form-control" id="basic-url" aria-describedby="basic-addon3">
+        </div>
+        <div class="input-group mb-3">
+          <div class="input-group-prepend">
+            <span class="input-group-text">Contain</span>
+          </div>
+          <textarea name="contain" class="form-control" aria-label="With textarea"></textarea>
+        </div>
+        <div class="input-group mb-3">
+          <div class="input-group-prepend">
+            <span class="input-group-text" id="basic-addon3">Location</span>
+          </div>
+          <input name="location" type="text" class="form-control" id="basic-url" aria-describedby="basic-addon3">
+        </div>
+        <div class="input-group mb-3">
+          <div class="input-group-prepend">
+            <span class="input-group-text" id="basic-addon3">Banner</span>
+          </div>
+          <input name="banner_url" type="text" class="form-control" id="basic-url" aria-describedby="basic-addon3">
+        </div>
+        <button type="submit" class="btn btn-primary mb-3">Create</button>
+      </form>
+
+      {% endif %}
+
+    </div>
+  </div>
 </div>
+
 
 {% endblock %}

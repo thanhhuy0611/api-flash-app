@@ -1,17 +1,5 @@
 {% extends './base.html' %}
 {% block content %}
-{% with messages = get_flashed_messages(with_categories=true) %}
-<!-- Categories: success (green), info (blue), warning (yellow), danger (red) -->
-{% if messages %}
-{% for category, message in messages %}
-<div class="alert alert-{{ category }} alert-dismissible" role="alert">
-  <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
-      aria-hidden="true">&times;</span></button>
-  <!-- <strong>Title</strong> --> {{ message }}
-</div>
-{% endfor %}
-{% endif %}
-{% endwith %}
 
 <div class="jumbotron">
   <h1 class="display-4">{{event.name}}</h1>
@@ -26,7 +14,7 @@
   <small>Location: {{event.location}}</small>
   <small>Create at: {{event.created_on}}</small>
 
-  {% for rating in event.ratings %}
+  {% for rating in event.ratings() %}
   <p>
     <a href="/">
       {{rating.user.user_name}} </a>
@@ -51,4 +39,21 @@
     </div>
   </form>
 </div>
+
+<div class="row">
+  <div class="col">
+    <div class="container d-flex justify-content-center align-items-center flex-column">
+      <h1>Tickets</h1>
+      <form action="{{url_for('ticket.purchase')}}" method="POST">
+        <input type="hidden" name="event_id" value="{{event.id}}">
+        {% for ticket in event.tickets() %}
+          <h1>{{ticket.title}}</h1>
+          <input type="number" name="{{ticket.title}}">
+        {% endfor %}
+        <button type="submit">Purchase</button>
+      </form>
+    </div>
+  </div>
+</div>
+
 {% endblock %}

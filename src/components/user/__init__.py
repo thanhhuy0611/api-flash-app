@@ -15,10 +15,10 @@ from requests.exceptions import HTTPError
 
 ##import __init__.src (app,db,model,..)
 from src import *
+from src.models.order import Order
 
 ## define blue print (class = (url_prefix, route to view))
 user_blueprint = Blueprint('user', __name__, template_folder='../../templates/user')
-
 
 ## Create form validation class
 class EmailForm(FlaskForm):
@@ -150,4 +150,13 @@ def dashboard(id):
 #     return redirect(url_for(ref, id= id))
 
 
+##-----###################################################
+
+@user_blueprint.route('/orders')
+@login_required
+def orders():
+    orders = Order.query.filter_by(user_id = current_user.id).all()
+    event = Event.query.filter_by(id = orders[0].event_id).first()
+    print(event.name)
+    return render_template('/orders.html',  orders=orders, event = event)
 ##-----###################################################
