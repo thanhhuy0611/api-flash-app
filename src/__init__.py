@@ -1,38 +1,50 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
-from flask_sqlalchemy import SQLAlchemy
+from flask import Flask, render_template, request, redirect, url_for, flash, request, jsonify
 from flask_login import UserMixin, LoginManager, current_user, login_user, logout_user, login_required
+# from .config import Config
 from werkzeug.security import check_password_hash, generate_password_hash
-from flask_wtf import FlaskForm
 from flask_migrate import Migrate
-from wtforms import StringField, validators, PasswordField, SubmitField
+from flask_cors import CORS
+import uuid
+from flask_sqlalchemy import SQLAlchemy
+
+
 
 
 app = Flask(__name__, static_folder='static')
+
 app.config.from_object('config.Config')
 
 #config SQLAlchemy
 db = SQLAlchemy(app)
-
+from .facebooklogin.cli import create_db
 #-------------------------------------------------
 ##  import models
 from src.models.user import *
 from src.models.event import *
 from src.models.ticket import *
 from src.models.order import *
+from src.models.post import *
+
 db.create_all()
 
-#import class WTForm
-from src.components.user import *
 
 migrate = Migrate(app, db)
+
+CORS(app)
 ## set up flask-login
-login_manager= LoginManager(app)
+login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
 # set current_user
-@login_manager.user_loader
-def load_user(id):
-  return Users.query.filter_by(id = b).first()
+@login_manager.request_loader
+def load_user_from_request(request):
+    api_key = request.headers.get('Authorization')
+    if api_key:
+        api_key = api_key.replace('Token ', '', 1)
+        token = Token.query.filter_by(uuid=api_key).first()
+        if token:
+            return token.user
+    return None
 
 #-------------------------------------------------------
 ## import controlers file
@@ -42,76 +54,95 @@ from src.components.event import event_blueprint
 app.register_blueprint(event_blueprint, url_prefix='/event')
 from src.components.ticket import ticket_blueprint
 app.register_blueprint(ticket_blueprint, url_prefix='/ticket')
+from .facebooklogin.oauth import blueprint
+app.register_blueprint(blueprint, url_prefix="/login")
 
-# set current_user
-@login_manager.user_loader
-def load_user(b):
-    return Users.query.filter_by(id = b).first()
-
-# show all event
-@app.route('/',methods=["GET","POST"])
+# show all post
+@app.route('/postlist',methods=["GET","POST"])
+@login_required
 def home():
-    events = Event.query.all()
-    filter = request.args.get('filter')
-    if filter == 'most-recently':
-        events = Event.query.order_by(Event.created_on.desc()).all()
-    # if filter == 'top-viewed':
-    #     posts = Blog.query.order_by(Blog.view_count.desc()).all()
-    return render_template('root/index.html',events = events, ref = 'home')
+    if request.method == 'POST':
+        posts = Post.query.all()
+        filter = request.args.get('filter')
+        if filter == 'most-recently':
+            posts = Post.query.order_by(Event.created_on.desc()).all()
+        # if filter == 'top-viewed':
+        #     posts = Blog.query.order_by(Blog.view_count.desc()).all()
+
+        return jsonify(
+            success=True,
+            posts=[post.render() for post in posts]
+        )
+
+#get current user
+@app.route('/currentuser', methods=['GET','POST'])
+@login_required
+def get_current_user():
+    if request.method == 'POST':
+        return jsonify(
+            user_id=current_user.id,
+            user_name=current_user.user_name,
+        )
 
 # sign up account
 @app.route('/signup', methods=["GET","POST"])
 def sign_up():
-    form = RegisterForm()
-    if not current_user.is_anonymous:
-        return redirect(url_for('home'))
     if request.method == "POST":
-        if form.validate_on_submit():
-        #check email unique
-            is_email_exits = Users.query.filter_by(email = form.email.data).first()
-            print("emailcheck",is_email_exits)
-            if is_email_exits:
-                flash('Email is exits. Please try again!','danger')
-            if not is_email_exits:
-                print(form.user_type.data)
-                new_user =  Users(
-                    email = form.email.data,        
-                    user_name = form.user_name.data,
-                    user_type = form.user_type.data
+        dt = request.get_json()
+        is_email_exits = Users.query.filter_by(email = dt['email']).first()
+        if is_email_exits:
+            return jsonify({'success':False, 'status':'Email already exists'})
+        if not is_email_exits:
+            new_user =  Users(
+                email = dt['email'],        
+                user_name = dt['name'],
+            )
+            new_user.set_password(dt['password'])
+            db.session.add(new_user)
+            db.session.commit()
+            user = Users.query.filter_by(email = dt['email']).first()
+            if user:
+                new_token =  Token(
+                    uuid = uuid.uuid4().hex,
+                    user_id = user.id
                 )
-                new_user.set_password(form.password.data)
-                db.session.add(new_user)
+                db.session.add(new_token)
                 db.session.commit()
-                login_user(new_user)
-                return redirect(url_for('home'))
-            # for field,error in form.errors.items():
-                # flash(f'{field}: {error[0]}','danger')
-    return render_template('root/signup.html', form = form)
+            return jsonify({'token': new_token.uuid,
+                            'success':True,    
+                })
+
 
 # check account login
 @app.route('/login', methods=["GET","POST"])
 def login():
-    if not current_user.is_anonymous:
-        return redirect(url_for('home'))
-
     if request.method == "POST":
-        user = Users.query.filter_by(email = request.form["email"]).first()
+        user = Users.query.filter_by(email = request.get_json()["email"]).first()
         if not user:
-            flash('Email incorrect!','danger')
+            return jsonify({'success':False, 'status':'Email is not correct'})
         if user:
-            if user.check_password(request.form['password']):
-                login_user(user)
-                return redirect(url_for('user.dashboard',id = current_user.id))
+            if user.check_password(request.get_json()['password']):
+                new_token =  Token(
+                    uuid = uuid.uuid4().hex,
+                    user_id = user.id
+                )
+                db.session.add(new_token)
+                db.session.commit()
+                return jsonify({'success':True, 'token':new_token.uuid})
             else:
-                flash('Password incorrect!','danger')
-    return render_template('root/login.html')
+                return jsonify({'success':False, 'status':'Password is not correct'})
+
 
 # logout 
-@app.route('/logout')
+@app.route('/logout',methods=['GET','POST'])
 @login_required
 def logout():
-    logout_user()
-    return redirect(url_for('login'))
+    if request.method == "POST":
+        user_token = Token.query.filter_by(user_id = current_user.id).first()
+        db.session.delete(user_token)
+        db.session.commit()
+        return jsonify({"success": True})
+        
 
 
 
