@@ -75,14 +75,13 @@ def home():
         )
 
 #get current user
-@app.route('/currentuser', methods=['GET','POST'])
+@app.route('/currentuser')
 @login_required
 def get_current_user():
-    if request.method == 'POST':
-        return jsonify(
-            user_id=current_user.id,
-            user_name=current_user.user_name,
-        )
+    return jsonify(
+        user_id=current_user.id,
+        user_name=current_user.user_name,
+    )
 
 # sign up account
 @app.route('/signup', methods=["GET","POST"])
