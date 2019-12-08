@@ -60,19 +60,59 @@ app.register_blueprint(blueprint, url_prefix="/login")
 # show all post
 @app.route('/postlist',methods=["GET","POST"])
 @login_required
-def home():
-    if request.method == 'POST':
-        posts = Post.query.all()
+def post_list():
+    if request.method == 'GET':
+        posts = Post.query.order_by(Post.updated_on.desc()).all()
         filter = request.args.get('filter')
         if filter == 'most-recently':
-            posts = Post.query.order_by(Event.created_on.desc()).all()
+            posts = Post.query.order_by(Event.updated_on.desc()).all()
         # if filter == 'top-viewed':
         #     posts = Blog.query.order_by(Blog.view_count.desc()).all()
-
         return jsonify(
             success=True,
             posts=[post.render() for post in posts]
         )
+
+# delete post
+@app.route('/postdelete', methods=['GET','POST'])
+@login_required
+def delete_post():
+    if request.method == "POST":
+        post = Post.query.filter_by(id=request.get_json()['id']).first()
+        if post:
+            db.session.delete(post)
+            db.session.commit()
+            return jsonify(success=True)
+        if not post:
+            return jsonify(success=False,status='post is not exist')
+
+# edit post
+@app.route('/editpost', methods=['GET','POST'])
+@login_required
+def edit_post():
+    if request.method == "POST":
+        post = Post.query.filter_by(id = request.get_json()['id']).first()
+        if post:
+            post.content = request.get_json()['content'],
+            post.image_url = request.get_json()['image_url'],
+            db.session.commit()
+            return jsonify(success=True)
+        if not post:
+            return jsonify(success=False,status='post is not exist')
+
+# create post
+@app.route('/createpost', methods=['GET','POST'])
+@login_required
+def create_post():
+    if request.method == "POST":
+        post = Post(
+            content = request.get_json()['content'],
+            image_url = request.get_json()['image_url'],
+            user_id = current_user.id
+        )
+        db.session.add(post)
+        db.session.commit()
+        return jsonify(success=True)
 
 #get current user
 @app.route('/currentuser')

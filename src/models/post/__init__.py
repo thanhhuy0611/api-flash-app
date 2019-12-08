@@ -4,7 +4,7 @@ from src.models.user import Users
 
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key = True) 
-    content =  db.Column(db.String,nullable= False)
+    content =  db.Column(db.String,nullable= True)
     image_url = db.Column(db.String,nullable= True)
     created_on = db.Column(db.DateTime, server_default=db.func.now())
     updated_on = db.Column(db.DateTime, server_default=db.func.now(), server_onupdate=db.func.now())
