@@ -61,17 +61,25 @@ app.register_blueprint(blueprint, url_prefix="/login")
 @app.route('/postlist',methods=["GET","POST"])
 @login_required
 def post_list():
-    if request.method == 'GET':
-        posts = Post.query.order_by(Post.updated_on.desc()).all()
-        filter = request.args.get('filter')
-        if filter == 'most-recently':
-            posts = Post.query.order_by(Event.updated_on.desc()).all()
-        # if filter == 'top-viewed':
-        #     posts = Blog.query.order_by(Blog.view_count.desc()).all()
-        return jsonify(
-            success=True,
-            posts=[post.render() for post in posts]
-        )
+    if request.method == 'POST':
+        post_id = request.get_json()['post_id']
+        if not post_id == 'list':
+            posts = Post.query.filter_by(id = post_id).first()
+            return jsonify(
+                success=True,
+                posts=posts.render()
+            )
+        if post_id == 'list' :
+            posts = Post.query.order_by(Post.updated_on.desc()).all()
+            filter = request.args.get('filter')
+            if filter == 'most-recently':
+                posts = Post.query.order_by(Event.updated_on.desc()).all()
+            # if filter == 'top-viewed':
+            #     posts = Blog.query.order_by(Blog.view_count.desc()).all()
+            return jsonify(
+                success=True,
+                posts=[post.render() for post in posts]
+            )
 
 # delete post
 @app.route('/postdelete', methods=['GET','POST'])
@@ -113,6 +121,28 @@ def create_post():
         db.session.add(post)
         db.session.commit()
         return jsonify(success=True)
+
+#like post
+@app.route('/likepost', methods=['GET','POST'])
+@login_required
+def like_post():
+    dt = request.get_json()
+    if request.method == "POST":
+        like = Like.query.filter_by(post_id=dt['post_id'],user_id=current_user.id).first()
+        if like:
+            db.session.delete(like)
+            db.session.commit()
+            return jsonify(success=True)
+        if not like:
+            like = Like(
+                user_id=current_user.id,
+                post_id=dt['post_id']   
+            )
+            db.session.add(like)
+            db.session.commit()
+            return jsonify(success=True)
+
+#==========================================================================
 
 #get current user
 @app.route('/currentuser')

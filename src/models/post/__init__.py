@@ -14,7 +14,6 @@ class Post(db.Model):
 
     def render(self):
         likes = [like.render() for like in self.like_list]
-        likers = [like['owner'] for like in likes]
         comments = [comment.render() for comment in self.comment_list]
         return {
             "post_id":self.id,
@@ -26,7 +25,8 @@ class Post(db.Model):
             },
             "likes": {
                 'count':len(likes),
-                'liker':[like['owner'] for like in likes]
+                'liker_name':[like['owner'].user_name for like in likes],
+                'liker_id':[like['owner'].id for like in likes]
             },
             "comment":{
                 'count':len(comments),
@@ -72,7 +72,7 @@ class Like(db.Model):
     def render(self):
         return {
             'like_id': self.id,
-            'owner': self.user.user_name,
+            'owner': self.user,
             "created_on":self.created_on,
             "updated_on":self.updated_on,
         }
