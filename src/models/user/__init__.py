@@ -14,8 +14,8 @@ class Users(UserMixin,db.Model):
     list_post = db.relationship('Post', backref='user',lazy = True)
     list_like = db.relationship('Like', backref='user',lazy = True)
     list_comment = db.relationship('Comment', backref='user', lazy = True)
-    created_on = db.Column(db.DateTime, server_default=db.func.now())
-    updated_on = db.Column(db.DateTime, server_default=db.func.now(), server_onupdate=db.func.now())
+    created_on = db.Column(db.DateTime(timezone=True), server_default=db.func.now())
+    updated_on = db.Column(db.DateTime(timezone=True), server_default=db.func.now(), server_onupdate=db.func.now())
 
     def set_password(self, password):
         self.password = generate_password_hash(password)
