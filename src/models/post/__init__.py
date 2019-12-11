@@ -69,6 +69,7 @@ class Like(db.Model):
     user_id = db.Column(db.Integer,db.ForeignKey(Users.id),nullable = False)
     post_id = db.Column(db.Integer,db.ForeignKey(Post.id, ondelete='CASCADE'),nullable = True)
     comment_id = db.Column(db.Integer,db.ForeignKey(Comment.id, ondelete='CASCADE'),nullable = True)
+    content =  db.Column(db.String,nullable= True)  
 
     def render(self):
         return {
