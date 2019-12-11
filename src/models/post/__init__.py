@@ -9,8 +9,8 @@ class Post(db.Model):
     created_on = db.Column(db.DateTime(timezone=True), server_default=db.func.now())
     updated_on = db.Column(db.DateTime(timezone=True), server_default=db.func.now(), server_onupdate=db.func.now())
     user_id = db.Column(db.Integer, db.ForeignKey(Users.id),nullable = False)
-    like_list = db.relationship('Like', backref='post', lazy=True)
-    comment_list = db.relationship('Comment', backref='post', lazy=True)
+    like_list = db.relationship('Like', backref=db.backref('post'), passive_deletes="all", lazy=True)
+    comment_list = db.relationship('Comment', backref=db.backref('post'), passive_deletes="all" , lazy=True)
 
     def render(self):
         likes = [like.render() for like in self.like_list]
@@ -42,8 +42,8 @@ class Comment(db.Model):
     created_on = db.Column(db.DateTime(timezone=True), server_default=db.func.now())
     updated_on = db.Column(db.DateTime(timezone=True), server_default=db.func.now(), server_onupdate=db.func.now())
     user_id = db.Column(db.Integer,db.ForeignKey(Users.id),nullable = False)
-    post_id = db.Column(db.Integer,db.ForeignKey(Post.id),nullable = False)
-    like_list = db.relationship('Like', backref='comment', lazy=True)
+    post_id = db.Column(db.Integer,db.ForeignKey(Post.id,  ondelete='CASCADE'),nullable = False)
+    like_list = db.relationship('Like', backref=db.backref('comment'),  passive_deletes="all", lazy=True)
     
     def render(self):
         likes = [like.render() for like in self.like_list]
@@ -54,7 +54,8 @@ class Comment(db.Model):
             'owner': self.user.user_name,
              "likes": {
                 'count':len(likes),
-                'liker':[like['owner'] for like in likes]
+                'liker_name':[like['owner'].user_name for like in likes],
+                'liker_id':[like['owner'].id for like in likes]
             },
             "created_on":self.created_on,
             "updated_on":self.updated_on,
@@ -66,8 +67,8 @@ class Like(db.Model):
     created_on = db.Column(db.DateTime(timezone=True), server_default=db.func.now())
     updated_on = db.Column(db.DateTime(timezone=True), server_default=db.func.now(), server_onupdate=db.func.now())
     user_id = db.Column(db.Integer,db.ForeignKey(Users.id),nullable = False)
-    post_id = db.Column(db.Integer,db.ForeignKey(Post.id),nullable = True)
-    comment_id = db.Column(db.Integer,db.ForeignKey(Comment.id),nullable = True)
+    post_id = db.Column(db.Integer,db.ForeignKey(Post.id, ondelete='CASCADE'),nullable = True)
+    comment_id = db.Column(db.Integer,db.ForeignKey(Comment.id, ondelete='CASCADE'),nullable = True)
 
     def render(self):
         return {

@@ -141,9 +141,47 @@ def like_post():
             db.session.add(like)
             db.session.commit()
             return jsonify(success=True)
+#==========================================================================
+#get comments
+@app.route('/getcomment', methods=['GET','POST'])
+@login_required
+def get_comment():
+    if request.method == 'POST':
+        comment_id = request.get_json()['comment_id']
+        if not comment_id == 'list':
+            comment = Comment.query.filter_by(id = comment_id).first()
+            return jsonify(
+                success=True,
+                posts=comment.render()
+            )
+        if comment_id == 'list' :
+            comments = Comment.query.filter_by(post_id=request.get_json()['post_id']).order_by(Comment.updated_on.desc()).all()
+            filter = request.args.get('filter')
+            if filter == 'most-recently':
+                comments = Comment.query.order_by(Event.updated_on.desc()).all()
+            # if filter == 'top-viewed':
+            #     comments = Blog.query.order_by(Blog.view_count.desc()).all()
+            return jsonify(
+                success=True,
+                comments=[comment.render() for comment in comments]
+            )
+
+
+# create comment
+@app.route('/createcomment', methods=['GET','POST'])
+@login_required
+def create_comment():
+    if request.method == "POST":
+        comment = Comment(
+            content=request.get_json()['content'],
+            post_id=request.get_json()['post_id'],
+            user_id=current_user.id
+        )
+        db.session.add(comment)
+        db.session.commit()
+        return jsonify(success=True)
 
 #==========================================================================
-
 #get current user
 @app.route('/currentuser')
 @login_required
