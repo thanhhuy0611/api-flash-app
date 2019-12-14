@@ -232,6 +232,7 @@ def follow_user(id):
         db.session.commit()
         return jsonify(success=True)
 
+
 #search
 @app.route('/search',methods=['GET','POST'])
 @login_required
