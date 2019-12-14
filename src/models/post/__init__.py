@@ -52,6 +52,7 @@ class Comment(db.Model):
             'comment_id': self.id,
             'content':self.content,
             'owner': self.user.user_name,
+            'owner_id': self.user.id,
              "likes": {
                 'count':len(likes),
                 'liker_name':[like['owner'].user_name for like in likes],

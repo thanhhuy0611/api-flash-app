@@ -103,14 +103,6 @@ def new_password():
                 )
             
 
-## dashboard root/user/<id>
-@user_blueprint.route('/<id>',methods=["GET","POST"])
-@login_required
-def dashboard(id):
-    user = Users.query.get(id)
-    events =  Event.query.filter_by(user_id = id).order_by(Event.created_on.desc()).all()
-    return render_template('user/dashboard.html',events = events)
-
 
 @user_blueprint.route('/orders')
 @login_required

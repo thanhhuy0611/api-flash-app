@@ -70,12 +70,11 @@ def post_list():
                 posts=posts.render()
             )
         if post_id == 'list' :
-            posts = Post.query.order_by(Post.updated_on.desc()).all()
-            filter = request.args.get('filter')
-            if filter == 'most-recently':
-                posts = Post.query.order_by(Event.updated_on.desc()).all()
-            # if filter == 'top-viewed':
-            #     posts = Blog.query.order_by(Blog.view_count.desc()).all()
+            user_id = request.get_json()['user_id']
+            if user_id:
+                posts = Post.query.filter_by(user_id = user_id).order_by(Post.updated_on.desc()).limit(10)
+            else:
+                posts = Post.query.order_by(Post.updated_on.desc()).limit(10)
             return jsonify(
                 success=True,
                 posts=[post.render() for post in posts]
@@ -152,7 +151,7 @@ def get_comment():
             comment = Comment.query.filter_by(id = comment_id).first()
             return jsonify(
                 success=True,
-                posts=comment.render()
+                comments=comment.render()
             )
         if comment_id == 'list' :
             comments = Comment.query.filter_by(post_id=request.get_json()['post_id']).order_by(Comment.updated_on.desc()).all()
@@ -181,15 +180,93 @@ def create_comment():
         db.session.commit()
         return jsonify(success=True)
 
+# delete comment
+@app.route('/commentdelete', methods=['GET','POST'])
+@login_required
+def delete_comment():
+    if request.method == "POST":
+        comment = Comment.query.filter_by(id=request.get_json()['id']).first()
+        if comment:
+            db.session.delete(comment)
+            db.session.commit()
+            return jsonify(success=True)
+        else:
+            return jsonify(success=False,status='comment is not exist')
+
+#like comment
+@app.route('/likecomment', methods=['GET','POST'])
+@login_required
+def like_comment():
+    dt = request.get_json()
+    if request.method == "POST":
+        like = Like.query.filter_by(comment_id=dt['comment_id'],user_id=current_user.id).first()
+        if like:
+            db.session.delete(like)
+            db.session.commit()
+            return jsonify(success=True)
+        if not like:
+            like = Like(
+                user_id=current_user.id,
+                comment_id=dt['comment_id']   
+            )
+            db.session.add(like)
+            db.session.commit()
+            return jsonify(success=True)
+
+#=================================================================
+#follow user
+@app.route('/follow/<id>', methods=['GET'])
+@login_required
+def follow_user(id):
+    follow = Follow.query.filter_by(follower_id=current_user.id, following_id=id).first()
+    if follow:
+        db.session.delete(follow)
+        db.session.commit()
+        return jsonify(success=True)
+    if not follow:
+        follow = Follow(
+            follower_id=current_user.id,
+            following_id=id   
+        )
+        db.session.add(follow)
+        db.session.commit()
+        return jsonify(success=True)
+
+#search
+@app.route('/search',methods=['GET','POST'])
+@login_required
+def search():
+    if request.method == "POST":
+        key = request.get_json()["key"]
+        search = f"%{key}%"
+        posts = Post.query.filter(Post.content.like(search)).all()
+        return jsonify(
+                success=True,
+                posts=[post.render() for post in posts]
+            )
+
+#get other user information
+@app.route('/user/<id>',methods=['GET'])
+@login_required
+def get_user(id):
+    user = Users.query.filter_by(id = id).first()
+    return jsonify(
+        user_id=user.id,
+        user_name=user.user_name,
+        follow=user.render_follow()
+    )
 #==========================================================================
 #get current user
 @app.route('/currentuser')
 @login_required
 def get_current_user():
-    return jsonify(
-        user_id=current_user.id,
-        user_name=current_user.user_name,
-    )
+    user = Users.query.filter_by(id = current_user.id).first()
+    if user:
+        return jsonify(
+            user_id=current_user.id,
+            user_name=current_user.user_name,
+            follower_id=user.render_follow()
+        )
 
 # sign up account
 @app.route('/signup', methods=["GET","POST"])

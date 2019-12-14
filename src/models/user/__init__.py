@@ -16,12 +16,31 @@ class Users(UserMixin,db.Model):
     list_comment = db.relationship('Comment', backref='user', lazy = True)
     created_on = db.Column(db.DateTime(timezone=True), server_default=db.func.now())
     updated_on = db.Column(db.DateTime(timezone=True), server_default=db.func.now(), server_onupdate=db.func.now())
-
+    
+    def render_follow(self):
+        array_followers = [{'id':follower.follower.id, 'name':follower.follower.user_name} for follower in self.list_follower]
+        array_following = [{'id':following.following.id, 'name':following.following.user_name} for following in self.list_following]
+        return {
+            'count_followers':len(array_followers),
+            'list_followers':array_followers,
+            'count_following':len(array_following),
+            'list_following':array_following,
+        }
+    
     def set_password(self, password):
         self.password = generate_password_hash(password)
 
     def check_password(self, password):
         return check_password_hash(self.password,password)
+
+class Follow(db.Model):
+    # data of table
+    id = db.Column(db.Integer, primary_key = True)
+    follower_id = db.Column(db.Integer, db.ForeignKey(Users.id))
+    following_id = db.Column(db.Integer, db.ForeignKey(Users.id))
+    # relationship to Users:
+    follower = db.relationship("Users", foreign_keys=[follower_id],backref='list_following')
+    following = db.relationship("Users", foreign_keys=[following_id],backref='list_follower')
 
 class Token(db.Model):
     id = db.Column(db.Integer, primary_key = True)
