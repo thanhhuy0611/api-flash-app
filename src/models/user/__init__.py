@@ -26,7 +26,12 @@ class Users(UserMixin,db.Model):
             'count_following':len(array_following),
             'list_following':array_following,
         }
-    
+
+    def render_following_post(self):
+        following_posts = [[post.render() for post in following.following.list_post] for following in self.list_following]
+        return following_posts
+
+
     def set_password(self, password):
         self.password = generate_password_hash(password)
 

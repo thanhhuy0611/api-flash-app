@@ -72,10 +72,22 @@ def post_list():
         if post_id == 'list' :
             user_id = request.get_json()['user_id']
             if user_id:
-                posts = Post.query.filter_by(user_id = user_id).order_by(Post.updated_on.desc()).limit(10)
+                posts = Post.query.filter_by(user_id = user_id).order_by(Post.updated_on.desc()).all()
             else:
-                posts = Post.query.order_by(Post.updated_on.desc()).limit(10)
+                posts = Post.query.order_by(Post.updated_on.desc()).limit(8)
             return jsonify(
+                success=True,
+                posts=[post.render() for post in posts]
+            )
+
+#load more
+@app.route('/post/loadmore', methods=['GET','POST'])
+@login_required
+def load_more():
+    last_post = request.get_json()['last_post']
+    if request.method == "POST":
+        posts = Post.query.filter(Post.id < last_post).order_by(Post.updated_on.desc()).limit(8)
+        return jsonify(
                 success=True,
                 posts=[post.render() for post in posts]
             )
@@ -232,6 +244,12 @@ def follow_user(id):
         db.session.commit()
         return jsonify(success=True)
 
+#list post following
+@app.route('/post/following', methods=['GET'])
+@login_required
+def posts_following():
+    user = Users.query.filter_by(id = current_user.id).first()
+    return jsonify(posts=user.render_following_post())
 
 #search
 @app.route('/search',methods=['GET','POST'])
